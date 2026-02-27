@@ -29,7 +29,7 @@ const Navbar = () => {
 
                     {user ? (
                         <div className="flex" style={{ gap: '0.75rem' }}>
-                            <Link to="/profile" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
+                            <Link to="/account" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
                                 <User size={18} />
                                 <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.name}</span>
                             </Link>

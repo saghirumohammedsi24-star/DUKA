@@ -10,8 +10,7 @@ import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
+import MyAccount from './pages/MyAccount';
 
 // Protected Route Component
 const PrivateRoute = ({ children }) => {
@@ -41,8 +40,8 @@ function App() {
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
-              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-              <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+              <Route path="/account" element={<PrivateRoute><MyAccount /></PrivateRoute>} />
+              <Route path="/profile" element={<Navigate to="/account" />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             </Routes>
           </main>

@@ -1,0 +1,379 @@
+/* ===== My Account Layout ===== */
+
+.ma-layout {
+    display: flex;
+    min-height: calc(100vh - 80px);
+    background: #f0f4f8;
+}
+
+/* Sidebar */
+.ma-sidebar {
+    width: 300px;
+    background: #fff;
+    border-right: 1px solid #e8ecf1;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+/* User Card */
+.ma-user-card {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: linear-gradient(135deg, #f8faff 0%, #eef4ff 100%);
+}
+
+.ma-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+}
+
+.ma-user-info h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.ma-user-info p {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+/* Navigation */
+.ma-nav {
+    flex: 1;
+    padding: 0.5rem 0;
+}
+
+.ma-nav-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #94a3b8;
+    font-weight: 700;
+    padding: 1.25rem 1.25rem 0.5rem;
+    margin: 0;
+}
+
+.ma-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: #475569;
+    position: relative;
+}
+
+.ma-nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: #2563eb;
+    border-radius: 0 4px 4px 0;
+    transition: height 0.2s;
+}
+
+.ma-nav-item:hover {
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+.ma-nav-item.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.ma-nav-item.active::before {
+    height: 60%;
+}
+
+.ma-nav-item.active .ma-nav-title {
+    font-weight: 700;
+}
+
+.ma-nav-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.ma-nav-title {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.ma-nav-desc {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+.ma-nav-item.active .ma-nav-desc {
+    color: #93b4f5;
+}
+
+.ma-nav-arrow {
+    color: #cbd5e1;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.ma-nav-item:hover .ma-nav-arrow {
+    transform: translateX(2px);
+}
+
+.ma-nav-item.active .ma-nav-arrow {
+    color: #2563eb;
+}
+
+.ma-badge {
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Logout */
+.ma-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 1rem 1.25rem;
+    margin: 0.5rem 1rem 1.5rem;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fff;
+    color: #dc2626;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ma-logout-btn:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+}
+
+/* Main Content */
+.ma-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+/* Override Profile page styles inside MyAccount */
+.ma-main .pf-page {
+    padding-bottom: 2rem;
+}
+
+/* Placeholder Pages */
+.ma-placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    text-align: center;
+    padding: 3rem;
+    color: #94a3b8;
+}
+
+.ma-placeholder-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.ma-placeholder-content p {
+    font-size: 0.95rem;
+    color: #64748b;
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.ma-cta-btn {
+    margin-top: 1.5rem;
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ma-cta-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* Rewards Card */
+.ma-rewards-card {
+    margin-top: 2rem;
+    padding: 2rem 3rem;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 16px;
+    border: 2px solid #f59e0b;
+    text-align: center;
+}
+
+.ma-rewards-pts {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #92400e;
+}
+
+.ma-rewards-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #a16207;
+    font-weight: 700;
+    margin-top: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .ma-sidebar {
+        width: 72px;
+        overflow: visible;
+    }
+
+    .ma-user-info,
+    .ma-nav-text,
+    .ma-nav-arrow,
+    .ma-nav-label,
+    .ma-logout-btn span {
+        display: none;
+    }
+
+    .ma-user-card {
+        justify-content: center;
+        padding: 1rem 0.5rem;
+    }
+
+    .ma-nav-item {
+        justify-content: center;
+        padding: 0.875rem;
+    }
+
+    .ma-logout-btn {
+        justify-content: center;
+        margin: 0.5rem;
+        padding: 0.875rem;
+    }
+
+    .ma-badge {
+        position: absolute;
+        top: 4px;
+        right: 8px;
+        font-size: 0.55rem;
+        padding: 1px 5px;
+    }
+}
+
+@media (max-width: 640px) {
+    .ma-layout {
+        flex-direction: column;
+    }
+
+    .ma-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: none;
+        border-bottom: 1px solid #e8ecf1;
+    }
+
+    .ma-user-card {
+        width: 100%;
+    }
+
+    .ma-nav {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0.5rem;
+        gap: 0.25rem;
+    }
+
+    .ma-nav-label {
+        display: none;
+    }
+
+    .ma-nav-text {
+        display: none;
+    }
+
+    .ma-nav-arrow {
+        display: none;
+    }
+
+    .ma-nav-item {
+        flex: 0 0 auto;
+        padding: 0.75rem;
+        border-radius: 10px;
+        justify-content: center;
+    }
+
+    .ma-nav-item::before {
+        display: none;
+    }
+
+    .ma-nav-item.active {
+        border-radius: 10px;
+    }
+
+    .ma-logout-btn {
+        margin: 0.5rem;
+    }
+
+    .ma-logout-btn span {
+        display: none;
+    }
+}
