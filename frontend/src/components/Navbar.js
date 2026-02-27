@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, LogOut } from 'lucide-react';
+import { ShoppingCart, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -28,10 +28,13 @@ const Navbar = () => {
                     </Link>
 
                     {user ? (
-                        <div className="flex">
-                            <span style={{ fontSize: '14px', fontWeight: '500' }}>Hi, {user.name}</span>
+                        <div className="flex" style={{ gap: '0.75rem' }}>
+                            <Link to="/profile" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
+                                <User size={18} />
+                                <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.name}</span>
+                            </Link>
                             <button onClick={handleLogout} className="flex" style={{ color: 'var(--secondary)' }}>
-                                <LogOut size={20} />
+                                <LogOut size={18} />
                             </button>
                         </div>
                     ) : (
