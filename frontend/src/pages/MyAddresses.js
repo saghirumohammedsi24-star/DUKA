@@ -3,6 +3,7 @@ import api from '../utils/api';
 import {
     MapPin, Plus, Trash2, Save, X, CheckCircle, Home, Briefcase, Star
 } from 'lucide-react';
+import './MyAddresses.css';
 
 const MyAddresses = () => {
     const [addresses, setAddresses] = useState([]);
