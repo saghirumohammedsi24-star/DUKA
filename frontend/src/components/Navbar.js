@@ -31,7 +31,7 @@ const Navbar = () => {
                         <div className="flex" style={{ gap: '0.75rem' }}>
                             <Link to="/account" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
                                 <User size={18} />
-                                <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.name}</span>
+                                <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.display_name || user.name}</span>
                             </Link>
                             <button onClick={handleLogout} className="flex" style={{ color: 'var(--secondary)' }}>
                                 <LogOut size={18} />

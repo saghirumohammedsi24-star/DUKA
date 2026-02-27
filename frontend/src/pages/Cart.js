@@ -31,7 +31,7 @@ const Cart = () => {
                             : 'https://via.placeholder.com/80';
 
                         return (
-                            <div key={item.id} className="card flex" style={{ justifyContent: 'space-between' }}>
+                            <div key={`${item.id}-${JSON.stringify(item.selected_attributes)}`} className="card flex" style={{ justifyContent: 'space-between', marginBottom: '1rem' }}>
                                 <div className="flex">
                                     <img
                                         src={imageUrl}
@@ -39,18 +39,32 @@ const Cart = () => {
                                         style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius)' }}
                                     />
                                     <div>
-                                        <h4 style={{ marginBottom: '0.25rem' }}>{item.name}</h4>
-                                        <p style={{ fontWeight: 'bold' }}>TZS {item.price}</p>
+                                        <h4 style={{ marginBottom: '0.1rem' }}>{item.name}</h4>
+                                        {item.selected_attributes && Object.keys(item.selected_attributes).length > 0 && (
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--secondary)', marginBottom: '0.25rem' }}>
+                                                {Object.entries(item.selected_attributes).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                                            </p>
+                                        )}
+                                        <p style={{ fontWeight: 'bold', color: 'var(--primary)' }}>TZS {Number(item.price).toLocaleString()}</p>
                                     </div>
                                 </div>
 
-                                <div className="flex" style={{ gap: '2rem' }}>
-                                    <div className="flex" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.25rem' }}>
-                                        <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={{ padding: '0.25rem 0.5rem' }}>-</button>
-                                        <span style={{ padding: '0 1rem' }}>{item.quantity}</span>
-                                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ padding: '0.25rem 0.5rem' }}>+</button>
+                                <div className="flex" style={{ gap: '1.5rem' }}>
+                                    <div className="flex" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.2rem' }}>
+                                        <button
+                                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1), item.selected_attributes)}
+                                            style={{ padding: '0.25rem 0.6rem', background: 'none', border: 'none', cursor: 'pointer' }}
+                                        >-</button>
+                                        <span style={{ padding: '0 0.8rem', fontWeight: 'bold' }}>{item.quantity}</span>
+                                        <button
+                                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.selected_attributes)}
+                                            style={{ padding: '0.25rem 0.6rem', background: 'none', border: 'none', cursor: 'pointer' }}
+                                        >+</button>
                                     </div>
-                                    <button onClick={() => removeFromCart(item.id)} style={{ color: 'red' }}>
+                                    <button
+                                        onClick={() => removeFromCart(item.id, item.selected_attributes)}
+                                        style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                                    >
                                         <Trash2 size={20} />
                                     </button>
                                 </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api, { BASE_URL } from '../utils/api';
 import {
     Package, ShoppingBag, DollarSign, Plus, Edit, Trash2,
-    LayoutDashboard, Users, Search, Upload, X
+    LayoutDashboard, Users, Search, Upload, X, Settings as SettingsIcon, FileText, MessageCircle
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -30,25 +30,45 @@ const AdminDashboard = () => {
     // Form states
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [formData, setFormData] = useState({ name: '', price: '', category: '', stock: '', description: '' });
+    const [formData, setFormData] = useState({ name: '', price: '', category: '', stock: '', description: '', attributes: [] });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [galleryFiles, setGalleryFiles] = useState([]);
+    const [galleryPreviews, setGalleryPreviews] = useState([]);
+    const [availableAttributes, setAvailableAttributes] = useState([]);
+
+    const [settings, setSettings] = useState({});
 
     useEffect(() => {
         fetchAdminData();
+        fetchAttributes();
     }, []);
+
+    const fetchAttributes = async () => {
+        try {
+            const res = await api.get('/attributes');
+            setAvailableAttributes(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const fetchAdminData = async () => {
         setLoading(true);
         try {
-            const [sumRes, prodRes, ordRes] = await Promise.all([
+            const [sumRes, prodRes, ordRes, setRes] = await Promise.all([
                 api.get('/admin/summary'),
                 api.get('/products'),
-                api.get('/orders')
+                api.get('/orders'),
+                api.get('/settings')
             ]);
             setSummary(sumRes.data);
             setProducts(prodRes.data);
             setOrders(ordRes.data);
+
+            const settingsMap = {};
+            setRes.data.forEach(s => settingsMap[s.key] = s.value);
+            setSettings(settingsMap);
         } catch (err) {
             console.error(err);
         } finally {
@@ -64,6 +84,13 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleGalleryChange = (e) => {
+        const files = Array.from(e.target.files);
+        setGalleryFiles(prev => [...prev, ...files]);
+        const previews = files.map(f => URL.createObjectURL(f));
+        setGalleryPreviews(prev => [...prev, ...previews]);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const data = new FormData();
@@ -72,9 +99,10 @@ const AdminDashboard = () => {
         data.append('category', formData.category);
         data.append('stock', formData.stock);
         data.append('description', formData.description);
-        if (imageFile) {
-            data.append('image', imageFile);
-        }
+        data.append('attributes', JSON.stringify(formData.attributes));
+
+        if (imageFile) data.append('image', imageFile);
+        galleryFiles.forEach(file => data.append('gallery', file));
 
         try {
             if (editingId) {
@@ -93,9 +121,11 @@ const AdminDashboard = () => {
     const closeForm = () => {
         setShowForm(false);
         setEditingId(null);
-        setFormData({ name: '', price: '', category: '', stock: '', description: '' });
+        setFormData({ name: '', price: '', category: '', stock: '', description: '', attributes: [] });
         setImageFile(null);
         setImagePreview(null);
+        setGalleryFiles([]);
+        setGalleryPreviews([]);
     };
 
     const handleDelete = async (id) => {
@@ -112,9 +142,11 @@ const AdminDashboard = () => {
             price: product.price,
             category: product.category,
             stock: product.stock,
-            description: product.description
+            description: product.description,
+            attributes: product.attributes?.map(a => a.id) || []
         });
         setImagePreview(product.image_url ? `${BASE_URL}${product.image_url}` : null);
+        setGalleryPreviews(product.gallery_urls?.map(url => `${BASE_URL}${url}`) || []);
         setShowForm(true);
     };
 
@@ -142,6 +174,9 @@ const AdminDashboard = () => {
                     </div>
                     <div className={`nav-item ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')}>
                         <Users size={20} /> Customers
+                    </div>
+                    <div className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+                        <SettingsIcon size={20} /> Settings
                     </div>
                 </nav>
             </aside>
@@ -254,47 +289,68 @@ const AdminDashboard = () => {
                     </>
                 )}
 
-                {activeTab === 'products' && (
+                {activeTab === 'orders' && (
                     <div className="content-section">
                         <div className="section-padding">
-                            <div className="search-bar">
-                                <Search size={18} color="var(--secondary)" />
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="Search products by name or category..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Category</th>
-                                        <th>Price</th>
-                                        <th>Stock</th>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredProducts.map(p => (
-                                        <tr key={p.id}>
-                                            <td style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                {p.image_url ? (
-                                                    <img src={`${BASE_URL}${p.image_url}`} alt={p.name} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover' }} />
-                                                ) : (
-                                                    <div style={{ width: '40px', height: '40px', borderRadius: '6px', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={16} /></div>
-                                                )}
-                                                <span style={{ fontWeight: '500' }}>{p.name}</span>
+                                    {orders.map(o => (
+                                        <tr key={o.id}>
+                                            <td style={{ fontWeight: 'bold' }}>{o.order_number || `#${o.id}`}</td>
+                                            <td>
+                                                <div>{o.customer_name || o.user_name}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--secondary)' }}>{o.customer_phone}</div>
                                             </td>
-                                            <td>{p.category}</td>
-                                            <td>TZS {p.price}</td>
-                                            <td>{p.stock}</td>
+                                            <td>TZS {Number(o.total_price).toLocaleString()}</td>
+                                            <td>
+                                                <select
+                                                    value={o.status}
+                                                    onChange={(e) => {
+                                                        api.put(`/orders/${o.id}/status`, { status: e.target.value });
+                                                        fetchAdminData();
+                                                    }}
+                                                    className="search-input"
+                                                    style={{ padding: '4px 8px', width: 'auto' }}
+                                                >
+                                                    <option>Pending</option>
+                                                    <option>Payment Confirmed</option>
+                                                    <option>Ready</option>
+                                                    <option>Out for Delivery</option>
+                                                    <option>Completed</option>
+                                                    <option>Cancelled</option>
+                                                </select>
+                                            </td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    <button onClick={() => handleEdit(p)} className="nav-item" style={{ padding: '6px' }}><Edit size={16} /></button>
-                                                    <button onClick={() => handleDelete(p.id)} className="nav-item" style={{ padding: '6px', color: 'var(--danger)' }}><Trash2 size={16} /></button>
+                                                    <a
+                                                        href={`${BASE_URL}/orders/Order_${o.order_number}.pdf`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="nav-item"
+                                                        style={{ padding: '6px' }}
+                                                        title="Download PDF"
+                                                    >
+                                                        <FileText size={16} />
+                                                    </a>
+                                                    <a
+                                                        href={`https://wa.me/${o.customer_phone?.replace('+', '')}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="nav-item"
+                                                        style={{ padding: '6px', color: '#25d366' }}
+                                                        title="WhatsApp"
+                                                    >
+                                                        <MessageCircle size={16} />
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -304,6 +360,8 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 )}
+
+                {activeTab === 'settings' && <SettingsModule />}
             </main>
 
             {/* Add/Edit Modal */}
@@ -347,18 +405,45 @@ const AdminDashboard = () => {
                                 />
                             </div>
 
+                            <div className="flex flex-col gap-2" style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>Product Gallery (Multiple)</label>
+                                <div className="upload-zone" onClick={() => document.getElementById('galleryInput').click()}>
+                                    <Upload size={24} color="var(--secondary)" />
+                                    <p style={{ fontSize: '0.875rem' }}>Add gallery images</p>
+                                    <input id="galleryInput" type="file" hidden multiple onChange={handleGalleryChange} accept="image/*" />
+                                </div>
+                                <div className="flex gap-2 mt-2 flex-wrap">
+                                    {galleryPreviews.map((p, i) => (
+                                        <img key={i} src={p} alt="Gallery Preview" style={{ width: '60px', height: '60px', borderRadius: '4px', objectFit: 'cover' }} />
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="flex flex-col gap-2" style={{ marginBottom: '2rem' }}>
-                                <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>Product Image</label>
-                                <div className="upload-zone" onClick={() => document.getElementById('imageInput').click()}>
-                                    <Upload size={32} color="var(--secondary)" style={{ marginBottom: '0.5rem' }} />
-                                    <p style={{ fontSize: '0.875rem', color: 'var(--secondary)' }}>Click to upload or drag and drop</p>
-                                    <p style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>PNG, JPG or WEBP (MAX. 5MB)</p>
-                                    <input id="imageInput" type="file" hidden onChange={handleImageChange} accept="image/*" />
-                                    {imagePreview && (
-                                        <div style={{ marginTop: '1rem' }}>
-                                            <img src={imagePreview} alt="Preview" className="preview-img" />
+                                <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>Linked Attributes</label>
+                                <div className="flex flex-wrap gap-4">
+                                    {availableAttributes.map(attr => (
+                                        <div key={attr.id} style={{ border: '1px solid var(--border)', padding: '0.8rem', borderRadius: '0.5rem' }}>
+                                            <p style={{ fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{attr.name}</p>
+                                            <div className="flex flex-col gap-1">
+                                                {attr.options?.map(opt => (
+                                                    <label key={opt.id} className="flex items-center gap-2" style={{ fontSize: '0.8rem' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.attributes.includes(opt.id)}
+                                                            onChange={(e) => {
+                                                                const newAttrs = e.target.checked
+                                                                    ? [...formData.attributes, opt.id]
+                                                                    : formData.attributes.filter(id => id !== opt.id);
+                                                                setFormData({ ...formData, attributes: newAttrs });
+                                                            }}
+                                                        />
+                                                        {opt.value}
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
                             </div>
 
@@ -373,6 +458,74 @@ const AdminDashboard = () => {
                 </div >
             )}
         </div >
+    );
+};
+
+
+const SettingsModule = () => {
+    const [settings, setSettings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await api.get('/settings');
+            setSettings(res.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdate = async (key, value) => {
+        setSaving(true);
+        try {
+            await api.post('/settings', { key, value });
+            await fetchSettings();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <div className="section-padding">Loading settings...</div>;
+
+    return (
+        <div className="content-section">
+            <div className="section-padding" style={{ borderBottom: '1px solid var(--border)' }}>
+                <h2>System Settings</h2>
+                <p style={{ fontSize: '0.9rem', color: 'var(--secondary)' }}>Manage your business information and automation preferences.</p>
+            </div>
+            <div className="section-padding">
+                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                    {settings.map(s => (
+                        <div key={s.id} className="flex flex-col gap-2 p-4" style={{ backgroundColor: '#f8fafc', borderRadius: '12px' }}>
+                            <label style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b' }}>
+                                {s.key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                            </label>
+                            <input
+                                className="search-input"
+                                value={s.value}
+                                onChange={(e) => {
+                                    const newSettings = settings.map(item => item.id === s.id ? { ...item, value: e.target.value } : item);
+                                    setSettings(newSettings);
+                                }}
+                                onBlur={(e) => handleUpdate(s.key, e.target.value)}
+                                disabled={saving}
+                            />
+                            <p style={{ fontSize: '0.75rem', color: 'var(--secondary)' }}>Updated: {new Date(s.updated_at).toLocaleString()}</p>
+                        </div>
+                    ))}
+                </div>
+                {saving && <p style={{ marginTop: '1rem', color: 'var(--primary)', fontSize: '0.8rem' }}>Saving changes...</p>}
+            </div>
+        </div>
     );
 };
 

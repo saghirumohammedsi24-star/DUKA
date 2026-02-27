@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
     const [error, setError] = useState('');
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -19,21 +19,39 @@ const Register = () => {
     };
 
     return (
-        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-            <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
-                <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Create Account</h2>
-                {error && <p style={{ color: 'red', marginBottom: '1rem', fontSize: '14px' }}>{error}</p>}
+        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem 1rem' }}>
+            <div className="card" style={{ width: '100%', maxWidth: '450px', padding: '2.5rem' }}>
+                <h2 style={{ marginBottom: '0.25rem', textAlign: 'center' }}>Create Account</h2>
+                <p style={{ textAlign: 'center', color: 'var(--secondary)', marginBottom: '2rem', fontSize: '14px' }}>Join the DUKA premium shopping experience</p>
+
+                {error && <div style={{ backgroundColor: '#fff1f2', color: '#e11d48', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '14px', border: '1px solid #fda4af' }}>{error}</div>}
+
                 <form onSubmit={handleSubmit}>
-                    <label>Name</label>
-                    <input type="text" className="input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-                    <label>Email</label>
-                    <input type="email" className="input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-                    <label>Password</label>
-                    <input type="password" className="input" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Register</button>
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '14px', fontWeight: '600' }}>Full Name</label>
+                        <input type="text" className="input" placeholder="John Doe" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                    </div>
+
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '14px', fontWeight: '600' }}>Email Address</label>
+                        <input type="email" className="input" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                    </div>
+
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '14px', fontWeight: '600' }}>Phone Number</label>
+                        <input type="tel" className="input" placeholder="+255 xxx xxx xxx" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required />
+                    </div>
+
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '14px', fontWeight: '600' }}>Password</label>
+                        <input type="password" className="input" placeholder="••••••••" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '16px', fontWeight: '700' }}>Create My Account</button>
                 </form>
-                <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '14px' }}>
-                    Already have an account? <Link to="/login" style={{ color: 'var(--primary)' }}>Login</Link>
+
+                <p style={{ marginTop: '2rem', textAlign: 'center', fontSize: '14px', color: 'var(--secondary)' }}>
+                    Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>Login instead</Link>
                 </p>
             </div>
         </div>

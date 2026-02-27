@@ -1,10 +1,15 @@
 const Cart = require('../models/cartModel');
 const Order = require('../models/orderModel');
+const { generateOrderPDF } = require('../services/pdfService');
+const { sendOrderEmail } = require('../services/emailService');
+const { generateWhatsAppLink } = require('../services/whatsappService');
+const path = require('path');
 
 // Cart Controllers
 const addToCart = async (req, res, next) => {
     try {
-        const { product_id, quantity } = req.body;
+        const { product_id, quantity, selected_attributes } = req.body;
+        // Cart model should also support attributes, but for now we store them in order items
         await Cart.addItem(req.user.id, product_id, quantity);
         res.status(201).json({ message: 'Item added to cart' });
     } catch (err) {
@@ -43,10 +48,36 @@ const removeFromCart = async (req, res, next) => {
 // Order Controllers
 const placeOrder = async (req, res, next) => {
     try {
-        const { items, total_price } = req.body;
-        const orderId = await Order.create(req.user.id, total_price, items);
+        const { items, total_price, delivery_data } = req.body;
+
+        // 1. Create order in DB
+        const { orderId, orderNumber } = await Order.create(req.user.id, total_price, items, delivery_data);
+
+        // 2. Fetch full details for PDF
+        const fullOrder = await Order.findById(orderId);
+        const orderItems = await Order.getOrderItems(orderId);
+
+        // 3. Generate PDF
+        const pdfFilename = `Order_${orderNumber}.pdf`;
+        const pdfPath = path.join(__dirname, '../../public/orders', pdfFilename);
+        await generateOrderPDF(fullOrder, orderItems, pdfPath);
+
+        // 4. Send Email to Admin (Async)
+        sendOrderEmail(fullOrder, pdfPath).catch(err => console.error('Background Email Error:', err));
+
+        // 5. Generate WhatsApp Link
+        const whatsappLink = await generateWhatsAppLink(fullOrder);
+
+        // 6. Clear Cart
         await Cart.clearCart(req.user.id);
-        res.status(201).json({ message: 'Order placed successfully', orderId });
+
+        res.status(201).json({
+            message: 'Order placed successfully',
+            orderId,
+            orderNumber,
+            whatsapp_link: whatsappLink,
+            pdf_url: `/orders/${pdfFilename}`
+        });
     } catch (err) {
         next(err);
     }

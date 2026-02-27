@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', getAllProducts);
 router.get('/:id', getProductById);
 router.post('/', authenticate, authorize(['admin']), (req, res, next) => {
-    upload.single('image')(req, res, (err) => {
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }])(req, res, (err) => {
         if (err) {
             console.error('Multer Error:', err);
             return res.status(400).json({ message: err });
@@ -18,7 +18,7 @@ router.post('/', authenticate, authorize(['admin']), (req, res, next) => {
 }, createProduct);
 
 router.put('/:id', authenticate, authorize(['admin']), (req, res, next) => {
-    upload.single('image')(req, res, (err) => {
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'gallery', maxCount: 10 }])(req, res, (err) => {
         if (err) {
             console.error('Multer Error:', err);
             return res.status(400).json({ message: err });

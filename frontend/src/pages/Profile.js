@@ -138,42 +138,85 @@ const Profile = () => {
             {/* Stats Bar */}
             <div className="container">
                 <div className="pf-stats-bar">
-                    <div className="pf-stat-card">
-                        <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                            <Package size={22} />
-                        </div>
-                        <div>
-                            <span className="pf-stat-num">{profile.total_orders || 0}</span>
-                            <span className="pf-stat-label">Orders</span>
-                        </div>
-                    </div>
-                    <div className="pf-stat-card">
-                        <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-                            <CreditCard size={22} />
-                        </div>
-                        <div>
-                            <span className="pf-stat-num">TZS {profile.wallet_balance || '0'}</span>
-                            <span className="pf-stat-label">Wallet</span>
-                        </div>
-                    </div>
-                    <div className="pf-stat-card">
-                        <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-                            <Star size={22} />
-                        </div>
-                        <div>
-                            <span className="pf-stat-num">{profile.loyalty_points || 0}</span>
-                            <span className="pf-stat-label">Points</span>
-                        </div>
-                    </div>
-                    <div className="pf-stat-card">
-                        <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)' }}>
-                            <Heart size={22} />
-                        </div>
-                        <div>
-                            <span className="pf-stat-num">{profile.status || 'Active'}</span>
-                            <span className="pf-stat-label">Status</span>
-                        </div>
-                    </div>
+                    {profile.role === 'admin' ? (
+                        <>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                                    <ShoppingBag size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.admin_stats?.total_orders || 0}</span>
+                                    <span className="pf-stat-label">Total Orders</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                                    <TrendingUp size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">TZS {Number(profile.admin_stats?.total_sales || 0).toLocaleString()}</span>
+                                    <span className="pf-stat-label">Total Sales</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                                    <Package size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.admin_stats?.total_products || 0}</span>
+                                    <span className="pf-stat-label">Products</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)' }}>
+                                    <User size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.admin_stats?.total_users || 0}</span>
+                                    <span className="pf-stat-label">System Users</span>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                                    <Package size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.total_orders || 0}</span>
+                                    <span className="pf-stat-label">Orders</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                                    <CreditCard size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">TZS {profile.wallet_balance || '0'}</span>
+                                    <span className="pf-stat-label">Wallet</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+                                    <Star size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.loyalty_points || 0}</span>
+                                    <span className="pf-stat-label">Points</span>
+                                </div>
+                            </div>
+                            <div className="pf-stat-card">
+                                <div className="pf-stat-icon" style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)' }}>
+                                    <Heart size={22} />
+                                </div>
+                                <div>
+                                    <span className="pf-stat-num">{profile.status || 'Active'}</span>
+                                    <span className="pf-stat-label">Status</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -210,47 +253,90 @@ const Profile = () => {
                     {/* ============ OVERVIEW TAB ============ */}
                     {activeTab === 'overview' && (
                         <div className="pf-grid-2">
-                            <div className="pf-card">
-                                <div className="pf-card-header">
-                                    <h3><ShoppingBag size={18} /> Recent Activity</h3>
-                                </div>
-                                <div className="pf-activity-list">
-                                    <div className="pf-activity-item">
-                                        <div className="pf-activity-dot" style={{ background: '#10b981' }}></div>
-                                        <div>
-                                            <p className="pf-activity-text">Account created successfully</p>
-                                            <p className="pf-activity-time">{profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Today'}</p>
+                            {profile.role === 'admin' ? (
+                                <>
+                                    <div className="pf-card">
+                                        <div className="pf-card-header">
+                                            <h3><Shield size={18} /> Admin Privileges</h3>
+                                        </div>
+                                        <div className="pf-activity-list">
+                                            <div className="pf-activity-item">
+                                                <div className="pf-activity-dot" style={{ background: '#10b981' }}></div>
+                                                <div>
+                                                    <p className="pf-activity-text">Full System Access Enabled</p>
+                                                    <p className="pf-activity-time">You have administrative control over users, products, and orders.</p>
+                                                </div>
+                                            </div>
+                                            <div className="pf-activity-item">
+                                                <div className="pf-activity-dot" style={{ background: '#6366f1' }}></div>
+                                                <div>
+                                                    <p className="pf-activity-text">Security Monitor Active</p>
+                                                    <p className="pf-activity-time">System-wide monitoring is enabled.</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="pf-activity-item">
-                                        <div className="pf-activity-dot" style={{ background: '#6366f1' }}></div>
-                                        <div>
-                                            <p className="pf-activity-text">Welcome to DUKA! Start shopping</p>
-                                            <p className="pf-activity-time">Explore our products</p>
+                                    <div className="pf-card">
+                                        <div className="pf-card-header">
+                                            <h3><TrendingUp size={18} /> Quick Navigation</h3>
+                                        </div>
+                                        <div className="pf-admin-nav">
+                                            <a href="/admin" className="pf-nav-link">
+                                                <div className="pf-nav-icon"><Shield size={16} /></div>
+                                                <span>Open Admin Dashboard</span>
+                                                <ChevronRight size={16} />
+                                            </a>
+                                            <div className="pf-nav-hint">
+                                                <p>Use the dashboard for advanced inventory and user management.</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div className="pf-card">
-                                <div className="pf-card-header">
-                                    <h3><Award size={18} /> Loyalty Program</h3>
-                                </div>
-                                <div className="pf-loyalty">
-                                    <div className="pf-loyalty-circle">
-                                        <div className="pf-loyalty-ring">
-                                            <span className="pf-loyalty-pts">{profile.loyalty_points || 0}</span>
-                                            <span className="pf-loyalty-label">Points</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="pf-card">
+                                        <div className="pf-card-header">
+                                            <h3><ShoppingBag size={18} /> Recent Activity</h3>
+                                        </div>
+                                        <div className="pf-activity-list">
+                                            <div className="pf-activity-item">
+                                                <div className="pf-activity-dot" style={{ background: '#10b981' }}></div>
+                                                <div>
+                                                    <p className="pf-activity-text">Account created successfully</p>
+                                                    <p className="pf-activity-time">{profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Today'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="pf-activity-item">
+                                                <div className="pf-activity-dot" style={{ background: '#6366f1' }}></div>
+                                                <div>
+                                                    <p className="pf-activity-text">Welcome to DUKA! Start shopping</p>
+                                                    <p className="pf-activity-time">Explore our products</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="pf-loyalty-info">
-                                        <p className="pf-loyalty-tier">🥉 Bronze Member</p>
-                                        <p className="pf-loyalty-next">Earn <strong>500 more</strong> points for Silver</p>
-                                        <div className="pf-progress-bar">
-                                            <div className="pf-progress-fill" style={{ width: `${Math.min((profile.loyalty_points || 0) / 500 * 100, 100)}%` }}></div>
+                                    <div className="pf-card">
+                                        <div className="pf-card-header">
+                                            <h3><Award size={18} /> Loyalty Program</h3>
+                                        </div>
+                                        <div className="pf-loyalty">
+                                            <div className="pf-loyalty-circle">
+                                                <div className="pf-loyalty-ring">
+                                                    <span className="pf-loyalty-pts">{profile.loyalty_points || 0}</span>
+                                                    <span className="pf-loyalty-label">Points</span>
+                                                </div>
+                                            </div>
+                                            <div className="pf-loyalty-info">
+                                                <p className="pf-loyalty-tier">🥉 Bronze Member</p>
+                                                <p className="pf-loyalty-next">Earn <strong>500 more</strong> points for Silver</p>
+                                                <div className="pf-progress-bar">
+                                                    <div className="pf-progress-fill" style={{ width: `${Math.min((profile.loyalty_points || 0) / 500 * 100, 100)}%` }}></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                     )}
 

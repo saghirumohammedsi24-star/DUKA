@@ -29,8 +29,30 @@ const User = {
             return null;
         }
         const [rows] = await db.execute('SELECT * FROM users WHERE id = ?', [id]);
-        if (rows[0]) delete rows[0].password;
-        return rows[0];
+        const user = rows[0];
+        if (user) {
+            delete user.password;
+            
+            // If admin, include some global stats
+            if (user.role === 'admin') {
+                const [[{ total_users }]] = await db.execute('SELECT COUNT(*) as total_users FROM users');
+                const [[{ total_products }]] = await db.execute('SELECT COUNT(*) as total_products FROM products');
+                const [[{ total_orders }]] = await db.execute('SELECT COUNT(*) as total_orders FROM orders');
+                const [[{ total_sales }]] = await db.execute('SELECT SUM(total_price) as total_sales FROM orders WHERE status = "Completed"');
+                
+                user.admin_stats = {
+                    total_users,
+                    total_products,
+                    total_orders,
+                    total_sales: total_sales || 0
+                };
+            } else {
+                // For customer, include personal stats
+                const [[{ total_orders }]] = await db.execute('SELECT COUNT(*) as total_orders FROM orders WHERE user_id = ?', [id]);
+                user.total_orders = total_orders;
+            }
+        }
+        return user;
     },
 
     updateProfile: async (id, data) => {

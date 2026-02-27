@@ -3,12 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api, { BASE_URL } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import './ProductDetails.css';
 
 const ProductDetails = () => {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [selectedAttributes, setSelectedAttributes] = useState({});
+    const [activeImage, setActiveImage] = useState(null);
     const { addToCart } = useCart();
     const navigate = useNavigate();
 
@@ -17,6 +20,7 @@ const ProductDetails = () => {
             try {
                 const res = await api.get(`/products/${id}`);
                 setProduct(res.data);
+                setActiveImage(res.data.image_url);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -26,58 +30,120 @@ const ProductDetails = () => {
         fetchProduct();
     }, [id]);
 
-    if (loading) return <div className="container">Loading product details...</div>;
-    if (!product) return <div className="container">Product not found.</div>;
+    if (loading) return <div className="p-loading">Loading...</div>;
+    if (!product) return <div className="p-notfound">Product not found.</div>;
 
-    const imageUrl = product.image_url
-        ? (product.image_url.startsWith('http') ? product.image_url : `${BASE_URL}${product.image_url}`)
-        : 'https://via.placeholder.com/400';
+    // Group attributes by name
+    const groupedAttributes = product.attributes ? product.attributes.reduce((acc, curr) => {
+        if (!acc[curr.attribute_name]) acc[curr.attribute_name] = [];
+        acc[curr.attribute_name].push(curr);
+        return acc;
+    }, {}) : {};
+
+    const handleAttributeSelect = (name, option) => {
+        setSelectedAttributes(prev => ({ ...prev, [name]: option.value }));
+        if (option.media_url) {
+            setActiveImage(option.media_url);
+        }
+    };
+
+    const mainImageUrl = activeImage
+        ? (activeImage.startsWith('http') ? activeImage : `${BASE_URL}${activeImage}`)
+        : (product.image_url.startsWith('http') ? product.image_url : `${BASE_URL}${product.image_url}`);
 
     return (
-        <div className="container">
-            <button onClick={() => navigate(-1)} className="flex" style={{ marginBottom: '2rem', color: 'var(--secondary)' }}>
-                <ArrowLeft size={20} /> Back
+        <div className="pd-page container">
+            <button onClick={() => navigate(-1)} className="pd-back-btn">
+                <ArrowLeft size={18} /> Back to Shop
             </button>
 
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', alignItems: 'start' }}>
-                <img
-                    src={imageUrl}
-                    alt={product.name}
-                    style={{ width: '100%', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}
-                />
-
-                <div>
-                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{product.category}</span>
-                    <h1 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{product.name}</h1>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '1.5rem' }}>
-                        TZS {product.price}
-                    </p>
-                    <p style={{ color: 'var(--secondary)', marginBottom: '2rem', lineHeight: '1.8' }}>
-                        {product.description}
-                    </p>
-
-                    <div className="flex" style={{ marginBottom: '2rem' }}>
-                        <div className="flex" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.25rem' }}>
-                            <button onClick={() => setQuantity(q => Math.max(1, q - 1))} style={{ padding: '0.5rem 1rem' }}>-</button>
-                            <span style={{ padding: '0.5rem 1.5rem', fontWeight: 'bold' }}>{quantity}</span>
-                            <button onClick={() => setQuantity(q => q + 1)} style={{ padding: '0.5rem 1rem' }}>+</button>
+            <div className="pd-grid">
+                {/* Image Section */}
+                <div className="pd-media">
+                    <div className="pd-main-img-wrap">
+                        <img src={mainImageUrl} alt={product.name} className="pd-main-img" />
+                    </div>
+                    {product.gallery_urls && product.gallery_urls.length > 0 && (
+                        <div className="pd-gallery">
+                            <div
+                                className={`pd-thumb ${activeImage === product.image_url ? 'active' : ''}`}
+                                onClick={() => setActiveImage(product.image_url)}
+                            >
+                                <img src={`${BASE_URL}${product.image_url}`} alt="Thumbnail" />
+                            </div>
+                            {product.gallery_urls.map((url, i) => (
+                                <div
+                                    key={i}
+                                    className={`pd-thumb ${activeImage === url ? 'active' : ''}`}
+                                    onClick={() => setActiveImage(url)}
+                                >
+                                    <img src={`${BASE_URL}${url}`} alt={`Thumb ${i}`} />
+                                </div>
+                            ))}
                         </div>
+                    )}
+                </div>
+
+                {/* Info Section */}
+                <div className="pd-info">
+                    <div className="pd-header">
+                        <span className="pd-category-badge">{product.category}</span>
+                        <h1 className="pd-title">{product.name}</h1>
+                        <p className="pd-sku">Product ID: {product.automatic_id || `DUKA-${product.id}`}</p>
+                        <p className="pd-price">TZS {Number(product.price).toLocaleString()}</p>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            addToCart(product, quantity);
-                            navigate('/cart');
-                        }}
-                        className="btn btn-primary"
-                        style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}
-                    >
-                        <ShoppingCart size={20} style={{ marginRight: '0.5rem' }} /> Add to Cart
-                    </button>
+                    <div className="pd-divider"></div>
 
-                    <p style={{ marginTop: '1rem', fontSize: '14px', color: 'var(--secondary)' }}>
-                        In Stock: {product.stock} units
-                    </p>
+                    <p className="pd-description">{product.description}</p>
+
+                    {/* Attributes */}
+                    <div className="pd-attributes">
+                        {Object.entries(groupedAttributes).map(([name, options]) => (
+                            <div key={name} className="pd-attr-group">
+                                <label className="pd-attr-label">{name}</label>
+                                <div className="pd-attr-options">
+                                    {options.map((opt, i) => (
+                                        <button
+                                            key={i}
+                                            className={`pd-attr-btn ${selectedAttributes[name] === opt.value ? 'active' : ''}`}
+                                            onClick={() => handleAttributeSelect(name, opt)}
+                                            style={name.toLowerCase() === 'color' && opt.media_type === 'text' ? { '--color': opt.value } : {}}
+                                        >
+                                            {opt.media_type === 'image' && opt.media_url ? (
+                                                <img src={`${BASE_URL}${opt.media_url}`} alt={opt.value} className="pd-attr-img" />
+                                            ) : (
+                                                <span>{opt.value}</span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="pd-actions">
+                        <div className="pd-qty-selector">
+                            <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+                            <span>{quantity}</span>
+                            <button onClick={() => setQuantity(q => q + 1)}>+</button>
+                        </div>
+                        <button
+                            onClick={() => {
+                                addToCart(product, quantity, selectedAttributes);
+                                navigate('/cart');
+                            }}
+                            className="pd-add-btn"
+                        >
+                            <ShoppingCart size={20} /> Add to Cart
+                        </button>
+                    </div>
+
+                    <div className="pd-footer">
+                        <p>✓ In Stock: {product.stock} units</p>
+                        <p>✓ 100% Genuine Product</p>
+                        <p>✓ Direct Delivery Available</p>
+                    </div>
                 </div>
             </div>
         </div>
