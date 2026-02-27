@@ -6,6 +6,7 @@ import {
     HelpCircle, LogOut, ChevronRight, Shield, Settings, Gift
 } from 'lucide-react';
 import Profile from './Profile';
+import MyAddresses from './MyAddresses';
 import './MyAccount.css';
 
 const MyAccount = () => {
@@ -57,14 +58,7 @@ const MyAccount = () => {
                     </div>
                 );
             case 'addresses':
-                return (
-                    <div className="ma-placeholder-content">
-                        <MapPin size={56} strokeWidth={1} />
-                        <h2>My Addresses</h2>
-                        <p>Manage your delivery addresses from your profile.</p>
-                        <button className="ma-cta-btn" onClick={() => setActiveSection('profile')}>Go to Profile</button>
-                    </div>
-                );
+                return <MyAddresses />;
             case 'payments':
                 return (
                     <div className="ma-placeholder-content">
