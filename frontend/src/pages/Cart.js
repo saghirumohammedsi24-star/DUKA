@@ -5,7 +5,7 @@ import { Trash2, ShoppingBag } from 'lucide-react';
 import { BASE_URL } from '../utils/api';
 
 const Cart = () => {
-    const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+    const { cart, removeFromCart, updateQuantity, cartTotal, orderNotes, setOrderNotes } = useCart();
     const navigate = useNavigate();
 
     if (cart.length === 0) {
@@ -75,13 +75,24 @@ const Cart = () => {
 
                 <div className="card" style={{ height: 'fit-content' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>Order Summary</h3>
+
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Special Instructions / Notes</label>
+                        <textarea
+                            value={orderNotes}
+                            onChange={(e) => setOrderNotes(e.target.value)}
+                            placeholder="Add notes for your order (optional)..."
+                            style={{ width: '100%', borderRadius: 'var(--radius)', border: '1px solid var(--border)', padding: '0.8rem', minHeight: '80px', fontSize: '0.9rem', fontFamily: 'inherit' }}
+                        />
+                    </div>
+
                     <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '1rem' }}>
                         <span>Subtotal</span>
-                        <span>TZS {cartTotal.toFixed(2)}</span>
+                        <span>TZS {Number(cartTotal).toLocaleString()}</span>
                     </div>
                     <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '2rem', fontWeight: 'bold', fontSize: '1.2rem' }}>
                         <span>Total</span>
-                        <span>TZS {cartTotal.toFixed(2)}</span>
+                        <span>TZS {Number(cartTotal).toLocaleString()}</span>
                     </div>
                     <button
                         onClick={() => navigate('/checkout')}

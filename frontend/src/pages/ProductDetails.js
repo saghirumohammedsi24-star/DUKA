@@ -10,10 +10,23 @@ const ProductDetails = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [selectedOptions, setSelectedOptions] = useState({});
     const [selectedAttributes, setSelectedAttributes] = useState({});
     const [activeImage, setActiveImage] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [avgRating, setAvgRating] = useState(0);
     const { addToCart } = useCart();
     const navigate = useNavigate();
+
+    const fetchReviews = async (productId) => {
+        try {
+            const res = await api.get(`/reviews/${productId}`);
+            setReviews(res.data.reviews || []);
+            setAvgRating(res.data.stats?.avg_rating || 0);
+        } catch (err) {
+            console.error('Error fetching reviews:', err);
+        }
+    };
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -21,6 +34,7 @@ const ProductDetails = () => {
                 const res = await api.get(`/products/${id}`);
                 setProduct(res.data);
                 setActiveImage(res.data.image_url);
+                fetchReviews(res.data.id);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -28,12 +42,19 @@ const ProductDetails = () => {
             }
         };
         fetchProduct();
-    }, [id]);
+    }, [id, fetchReviews]); // Included fetchReviews in dependency array for best practice
 
     if (loading) return <div className="p-loading">Loading...</div>;
     if (!product) return <div className="p-notfound">Product not found.</div>;
 
-    // Group attributes by name
+    // Calculate Dynamic Price
+    let currentPrice = Number(product.price);
+    if (product.price_depends_on_attribute) {
+        Object.values(selectedOptions).forEach(opt => {
+            currentPrice += Number(opt.price_modifier || 0);
+        });
+    }
+
     const groupedAttributes = product.attributes ? product.attributes.reduce((acc, curr) => {
         if (!acc[curr.attribute_name]) acc[curr.attribute_name] = [];
         acc[curr.attribute_name].push(curr);
@@ -42,8 +63,19 @@ const ProductDetails = () => {
 
     const handleAttributeSelect = (name, option) => {
         setSelectedAttributes(prev => ({ ...prev, [name]: option.value }));
+        setSelectedOptions(prev => ({ ...prev, [name]: option }));
         if (option.media_url) {
             setActiveImage(option.media_url);
+        }
+    };
+
+    const handleAddToWishlist = async () => {
+        try {
+            await api.post('/wishlist', { product_id: product.id });
+            alert('Added to wishlist!');
+        } catch (err) {
+            console.error(err);
+            alert('Please login to save items.');
         }
     };
 
@@ -62,6 +94,7 @@ const ProductDetails = () => {
                 <div className="pd-media">
                     <div className="pd-main-img-wrap">
                         <img src={mainImageUrl} alt={product.name} className="pd-main-img" />
+                        {product.discount > 0 && <div className="pd-discount-badge">-{Number(product.discount).toLocaleString()} OFF</div>}
                     </div>
                     {product.gallery_urls && product.gallery_urls.length > 0 && (
                         <div className="pd-gallery">
@@ -87,10 +120,17 @@ const ProductDetails = () => {
                 {/* Info Section */}
                 <div className="pd-info">
                     <div className="pd-header">
-                        <span className="pd-category-badge">{product.category}</span>
+                        <div className="flex justify-between items-start">
+                            <span className="pd-category-badge">{product.brand ? `${product.brand} | ` : ''}{product.category}</span>
+                            <button onClick={handleAddToWishlist} className="pd-wish-btn" title="Add to Wishlist">❤</button>
+                        </div>
                         <h1 className="pd-title">{product.name}</h1>
-                        <p className="pd-sku">Product ID: {product.automatic_id || `DUKA-${product.id}`}</p>
-                        <p className="pd-price">TZS {Number(product.price).toLocaleString()}</p>
+                        <p className="pd-sku">SKU: {product.sku || product.automatic_id}</p>
+
+                        <div className="pd-price-wrap">
+                            {product.discount > 0 && <span className="pd-base-price">TZS {Number(product.base_price).toLocaleString()}</span>}
+                            <h2 className="pd-price">TZS {currentPrice.toLocaleString()}</h2>
+                        </div>
                     </div>
 
                     <div className="pd-divider"></div>
@@ -101,7 +141,12 @@ const ProductDetails = () => {
                     <div className="pd-attributes">
                         {Object.entries(groupedAttributes).map(([name, options]) => (
                             <div key={name} className="pd-attr-group">
-                                <label className="pd-attr-label">{name}</label>
+                                <label className="pd-attr-label">
+                                    {name}
+                                    {selectedOptions[name]?.price_modifier > 0 &&
+                                        <span className="pd-attr-modifier"> (+{Number(selectedOptions[name].price_modifier).toLocaleString()})</span>
+                                    }
+                                </label>
                                 <div className="pd-attr-options">
                                     {options.map((opt, i) => (
                                         <button
@@ -130,20 +175,50 @@ const ProductDetails = () => {
                         </div>
                         <button
                             onClick={() => {
-                                addToCart(product, quantity, selectedAttributes);
-                                navigate('/cart');
+                                if (product.status === 'Active' && product.stock > 0) {
+                                    addToCart(product, quantity, selectedAttributes, currentPrice);
+                                    navigate('/cart');
+                                }
                             }}
-                            className="pd-add-btn"
+                            className={`pd-add-btn ${product.status !== 'Active' || product.stock <= 0 ? 'disabled' : ''}`}
+                            disabled={product.status !== 'Active' || product.stock <= 0}
                         >
-                            <ShoppingCart size={20} /> Add to Cart
+                            <ShoppingCart size={20} /> {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                         </button>
                     </div>
 
                     <div className="pd-footer">
-                        <p>✓ In Stock: {product.stock} units</p>
+                        <p className={product.stock < 5 ? 'text-danger' : ''}>✓ Availability: {product.status === 'Active' ? `${product.stock} units in stock` : product.status}</p>
                         <p>✓ 100% Genuine Product</p>
                         <p>✓ Direct Delivery Available</p>
                     </div>
+                </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="pd-reviews-section" style={{ marginTop: '4rem', paddingTop: '4rem', borderTop: '1px solid #e2e8f0' }}>
+                <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Customer Reviews</h2>
+                    <div className="flex" style={{ gap: '0.5rem', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.25rem', fontWeight: '800' }}>{Number(avgRating).toFixed(1)}</span>
+                        <div style={{ color: '#f59e0b' }}>{"★".repeat(Math.round(avgRating))}{"☆".repeat(5 - Math.round(avgRating))}</div>
+                        <span style={{ color: 'var(--secondary)', fontSize: '0.9rem' }}>({reviews.length} reviews)</span>
+                    </div>
+                </div>
+
+                <div className="pd-reviews-list">
+                    {reviews.length > 0 ? reviews.map((r, i) => (
+                        <div key={i} style={{ marginBottom: '2rem', paddingBottom: '2rem', borderBottom: i < reviews.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                            <div className="flex" style={{ justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ fontWeight: '700' }}>{r.user_name}</span>
+                                <span style={{ color: 'var(--secondary)', fontSize: '0.8rem' }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</div>
+                            <p style={{ color: 'var(--foreground)', lineHeight: '1.6' }}>{r.comment}</p>
+                        </div>
+                    )) : (
+                        <p style={{ textAlign: 'center', color: 'var(--secondary)', padding: '2rem' }}>No reviews yet. Be the first to leave one!</p>
+                    )}
                 </div>
             </div>
         </div>

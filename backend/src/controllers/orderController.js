@@ -103,9 +103,29 @@ const getAllOrders = async (req, res, next) => {
 
 const updateOrderStatus = async (req, res, next) => {
     try {
-        const { status } = req.body;
-        await Order.updateStatus(req.params.id, status);
-        res.json({ message: 'Order status updated' });
+        const { status, notes } = req.body;
+        const orderId = req.params.id;
+
+        // 1. Update DB
+        await Order.updateStatus(orderId, status, notes);
+
+        // 2. Fetch order to notify customer
+        const order = await Order.findById(orderId);
+        if (order && order.customer_email) {
+            console.log(`[Notification] Status updated to ${status} for Order #${order.order_number}. Sending update to ${order.customer_email}`);
+            // In production, we'd call an email/SMS service here
+        }
+
+        res.json({ message: 'Order status updated and customer notified' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getOrderHistory = async (req, res, next) => {
+    try {
+        const history = await Order.getStatusHistory(req.params.id);
+        res.json(history);
     } catch (err) {
         next(err);
     }
@@ -122,5 +142,5 @@ const getOrderDetails = async (req, res, next) => {
 
 module.exports = {
     addToCart, getCart, updateCartQuantity, removeFromCart,
-    placeOrder, getUserOrders, getAllOrders, updateOrderStatus, getOrderDetails
+    placeOrder, getUserOrders, getAllOrders, updateOrderStatus, getOrderDetails, getOrderHistory
 };

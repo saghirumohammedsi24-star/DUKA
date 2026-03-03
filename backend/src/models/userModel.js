@@ -32,14 +32,14 @@ const User = {
         const user = rows[0];
         if (user) {
             delete user.password;
-            
+
             // If admin, include some global stats
             if (user.role === 'admin') {
                 const [[{ total_users }]] = await db.execute('SELECT COUNT(*) as total_users FROM users');
                 const [[{ total_products }]] = await db.execute('SELECT COUNT(*) as total_products FROM products');
                 const [[{ total_orders }]] = await db.execute('SELECT COUNT(*) as total_orders FROM orders');
                 const [[{ total_sales }]] = await db.execute('SELECT SUM(total_price) as total_sales FROM orders WHERE status = "Completed"');
-                
+
                 user.admin_stats = {
                     total_users,
                     total_products,
@@ -84,10 +84,10 @@ const User = {
     },
 
     addAddress: async (userId, data) => {
-        const { full_address, city_region_zone, postal_code, country, gps_location, is_default } = data;
+        const { full_address, city_region_zone, postal_code, country, gps_location, is_default, label } = data;
         const [result] = await db.execute(
-            'INSERT INTO addresses (user_id, full_address, city_region_zone, postal_code, country, gps_location, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [userId, full_address, city_region_zone, postal_code, country, gps_location, is_default || false]
+            'INSERT INTO addresses (user_id, full_address, city_region_zone, postal_code, country, gps_location, is_default, label) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [userId, full_address, city_region_zone, postal_code, country, gps_location, is_default || false, label || 'Home']
         );
         return result;
     },

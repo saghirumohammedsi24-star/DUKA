@@ -9,12 +9,27 @@ const Product = {
     },
 
     create: async (productData) => {
-        const { name, description, price, category, stock, image_url, gallery_urls } = productData;
+        const { name, description, price, category, stock, image_url, gallery_urls, sku, brand, base_price, discount, price_depends_on_attribute, status } = productData;
         const automatic_id = await Product.generateId(category);
 
         const [result] = await db.execute(
-            'INSERT INTO products (name, description, price, category, stock, image_url, automatic_id, gallery_urls) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [name || null, description || null, price || null, category || null, stock || 0, image_url || null, automatic_id, JSON.stringify(gallery_urls || [])]
+            'INSERT INTO products (name, description, price, category, stock, image_url, automatic_id, gallery_urls, sku, brand, base_price, discount, price_depends_on_attribute, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                name || null,
+                description || null,
+                price || null,
+                category || null,
+                stock || 0,
+                image_url || null,
+                automatic_id,
+                JSON.stringify(gallery_urls || []),
+                sku || null,
+                brand || null,
+                base_price || 0,
+                discount || 0,
+                price_depends_on_attribute ? 1 : 0,
+                status || 'Active'
+            ]
         );
         return { ...result, automatic_id };
     },
@@ -49,9 +64,10 @@ const Product = {
         const product = rows[0];
         product.gallery_urls = typeof product.gallery_urls === 'string' ? JSON.parse(product.gallery_urls) : (product.gallery_urls || []);
 
-        // Fetch attributes
+        // Fetch attributes with type and price_modifier
         const [attributes] = await db.execute(`
-            SELECT a.name as attribute_name, ao.value, ao.media_url, ao.media_type, ao.id as option_id
+            SELECT a.name as attribute_name, a.type as attribute_type, 
+                   ao.value, ao.media_url, ao.media_type, ao.price_modifier, ao.id as option_id
             FROM product_attributes pa
             JOIN attribute_options ao ON pa.attribute_option_id = ao.id
             JOIN attributes a ON ao.attribute_id = a.id
@@ -63,10 +79,25 @@ const Product = {
     },
 
     update: async (id, productData) => {
-        const { name, description, price, category, stock, image_url, gallery_urls } = productData;
+        const { name, description, price, category, stock, image_url, gallery_urls, sku, brand, base_price, discount, price_depends_on_attribute, status } = productData;
         const [result] = await db.execute(
-            'UPDATE products SET name = ?, description = ?, price = ?, category = ?, stock = ?, image_url = ?, gallery_urls = ? WHERE id = ?',
-            [name || null, description || null, price || null, category || null, stock || 0, image_url || null, JSON.stringify(gallery_urls || []), id]
+            'UPDATE products SET name = ?, description = ?, price = ?, category = ?, stock = ?, image_url = ?, gallery_urls = ?, sku = ?, brand = ?, base_price = ?, discount = ?, price_depends_on_attribute = ?, status = ? WHERE id = ?',
+            [
+                name || null,
+                description || null,
+                price || null,
+                category || null,
+                stock || 0,
+                image_url || null,
+                JSON.stringify(gallery_urls || []),
+                sku || null,
+                brand || null,
+                base_price || 0,
+                discount || 0,
+                price_depends_on_attribute ? 1 : 0,
+                status || 'Active',
+                id
+            ]
         );
         return result;
     },

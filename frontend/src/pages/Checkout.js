@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import api from '../utils/api';
 
 const Checkout = () => {
-    const { cart, cartTotal, clearCart } = useCart();
+    const { cart, cartTotal, clearCart, orderNotes } = useCart();
     const [loading, setLoading] = useState(false);
     const [successData, setSuccessData] = useState(null);
     const [deliveryType, setDeliveryType] = useState('Pickup');
+    const [addresses, setAddresses] = useState([]);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [showNewAddressForm, setShowNewAddressForm] = useState(false);
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -15,6 +18,45 @@ const Checkout = () => {
         location: ''
     });
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchProfileAndAddresses();
+    }, []);
+
+    const fetchProfileAndAddresses = async () => {
+        try {
+            const profileRes = await api.get('/users/profile');
+            const addrRes = await api.get('/users/addresses');
+
+            setForm(prev => ({
+                ...prev,
+                name: profileRes.data.name || '',
+                phone: profileRes.data.phone || '',
+                email: profileRes.data.email || ''
+            }));
+
+            setAddresses(addrRes.data);
+            const defaultAddr = addrRes.data.find(a => a.is_default);
+            if (defaultAddr) {
+                setSelectedAddressId(defaultAddr.id);
+                setForm(prev => ({ ...prev, location: defaultAddr.full_address }));
+            } else if (addrRes.data.length > 0) {
+                setSelectedAddressId(addrRes.data[0].id);
+                setForm(prev => ({ ...prev, location: addrRes.data[0].full_address }));
+            } else {
+                setShowNewAddressForm(true);
+            }
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setShowNewAddressForm(true);
+        }
+    };
+
+    const handleAddressChange = (addr) => {
+        setSelectedAddressId(addr.id);
+        setForm(prev => ({ ...prev, location: addr.full_address }));
+        setShowNewAddressForm(false);
+    };
 
     const handlePlaceOrder = async () => {
         if (!form.name || !form.phone) {
@@ -39,7 +81,8 @@ const Checkout = () => {
                     delivery_location: form.location,
                     customer_name: form.name,
                     customer_phone: form.phone,
-                    customer_email: form.email
+                    customer_email: form.email,
+                    order_notes: orderNotes
                 }
             });
 
@@ -141,16 +184,47 @@ const Checkout = () => {
                                 onChange={e => setForm({ ...form, phone: e.target.value })}
                             />
                         </div>
+
                         {deliveryType === 'Delivery' && (
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Delivery Location</label>
-                                <textarea
-                                    className="input"
-                                    placeholder="House number, Street, Area..."
-                                    rows="3"
-                                    value={form.location}
-                                    onChange={e => setForm({ ...form, location: e.target.value })}
-                                ></textarea>
+                            <div style={{ marginTop: '1rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.8rem', fontWeight: 'bold' }}>Saved Addresses</label>
+                                <div className="grid" style={{ gap: '0.5rem', marginBottom: '1rem' }}>
+                                    {addresses.map(addr => (
+                                        <div
+                                            key={addr.id}
+                                            onClick={() => handleAddressChange(addr)}
+                                            style={{
+                                                padding: '1rem',
+                                                border: `2px solid ${selectedAddressId === addr.id ? 'var(--primary)' : 'var(--border)'}`,
+                                                borderRadius: '0.75rem',
+                                                cursor: 'pointer',
+                                                position: 'relative'
+                                            }}
+                                        >
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.2rem' }}>{addr.label || 'Home'} {addr.is_default && <span style={{ color: 'var(--primary)', fontSize: '0.7rem' }}>(Default)</span>}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--secondary)' }}>{addr.full_address}</div>
+                                        </div>
+                                    ))}
+                                    <button
+                                        onClick={() => { setShowNewAddressForm(true); setSelectedAddressId(null); }}
+                                        style={{ padding: '0.8rem', border: '1px dashed var(--border)', background: 'none', borderRadius: '0.75rem', cursor: 'pointer', fontSize: '0.85rem' }}
+                                    >
+                                        + Add New Address
+                                    </button>
+                                </div>
+
+                                {(showNewAddressForm || addresses.length === 0) && (
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>New Delivery Location</label>
+                                        <textarea
+                                            className="input"
+                                            placeholder="House number, Street, Area..."
+                                            rows="3"
+                                            value={form.location}
+                                            onChange={e => setForm({ ...form, location: e.target.value })}
+                                        ></textarea>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

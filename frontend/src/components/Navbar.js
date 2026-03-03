@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -26,10 +26,13 @@ const Navbar = () => {
                         <ShoppingCart size={20} />
                         {cart.length > 0 && <span style={{ backgroundColor: 'var(--accent)', color: 'white', padding: '0 5px', borderRadius: '10px', fontSize: '12px' }}>{cart.length}</span>}
                     </Link>
+                    <Link to="/wishlist" className="flex">
+                        <Heart size={20} />
+                    </Link>
 
                     {user ? (
                         <div className="flex" style={{ gap: '0.75rem' }}>
-                            <Link to="/account" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
+                            <Link to="/dashboard" className="flex" style={{ gap: '6px', color: 'var(--text)' }}>
                                 <User size={18} />
                                 <span style={{ fontSize: '14px', fontWeight: '500' }}>{user.display_name || user.name}</span>
                             </Link>

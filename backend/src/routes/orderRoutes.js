@@ -1,7 +1,7 @@
 const express = require('express');
 const {
     addToCart, getCart, updateCartQuantity, removeFromCart,
-    placeOrder, getUserOrders, getAllOrders, updateOrderStatus, getOrderDetails
+    placeOrder, getUserOrders, getAllOrders, updateOrderStatus, getOrderDetails, getOrderHistory
 } = require('../controllers/orderController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -17,7 +17,7 @@ router.delete('/cart/:id', authenticate, removeFromCart);
 router.post('/orders', authenticate, placeOrder);
 router.get('/orders/user', authenticate, getUserOrders);
 router.get('/orders', authenticate, authorize(['admin']), getAllOrders);
-router.get('/orders/:id', authenticate, getOrderDetails);
+router.get('/orders/:id/history', authenticate, getOrderHistory);
 router.put('/orders/:id/status', authenticate, authorize(['admin']), updateOrderStatus);
 
 module.exports = router;

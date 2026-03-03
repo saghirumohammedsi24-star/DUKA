@@ -4,21 +4,38 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState([]);
+    const [orderNotes, setOrderNotes] = useState('');
 
-    const addToCart = (product, quantity = 1, selected_attributes = {}) => {
+    const addToCart = (product, quantity = 1, selected_attributes = {}, finalPrice = null) => {
         setCart((prev) => {
             const existing = prev.find((item) =>
                 item.id === product.id &&
                 JSON.stringify(item.selected_attributes || {}) === JSON.stringify(selected_attributes)
             );
+
+            const itemPrice = finalPrice || product.price;
+
             if (existing) {
+                // Check stock
+                const newQty = existing.quantity + quantity;
+                if (newQty > product.stock) {
+                    alert(`Sorry, only ${product.stock} units available in stock.`);
+                    return prev;
+                }
+
                 return prev.map((item) =>
                     (item.id === product.id && JSON.stringify(item.selected_attributes || {}) === JSON.stringify(selected_attributes))
-                        ? { ...item, quantity: item.quantity + quantity }
+                        ? { ...item, quantity: newQty }
                         : item
                 );
             }
-            return [...prev, { ...product, quantity, selected_attributes }];
+
+            if (quantity > product.stock) {
+                alert(`Sorry, only ${product.stock} units available in stock.`);
+                return prev;
+            }
+
+            return [...prev, { ...product, price: itemPrice, quantity, selected_attributes }];
         });
     };
 
@@ -38,12 +55,15 @@ export const CartProvider = ({ children }) => {
         );
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = () => {
+        setCart([]);
+        setOrderNotes('');
+    };
 
     const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal }}>
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, orderNotes, setOrderNotes }}>
             {children}
         </CartContext.Provider>
     );

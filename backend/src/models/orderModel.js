@@ -14,21 +14,28 @@ const Order = {
 
         try {
             const orderNumber = await Order.generateOrderNumber();
-            const { delivery_type, delivery_location, customer_name, customer_phone, customer_email } = deliveryData;
+            const { delivery_type, delivery_location, customer_name, customer_phone, customer_email, order_notes } = deliveryData;
 
             const [orderResult] = await connection.execute(
                 `INSERT INTO orders (
           user_id, total_price, status, order_number, 
           delivery_type, delivery_location, customer_name, 
-          customer_phone, customer_email
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          customer_phone, customer_email, order_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     userId, totalPrice, 'Pending', orderNumber,
                     delivery_type || 'Pickup', delivery_location || null,
-                    customer_name || null, customer_phone || null, customer_email || null
+                    customer_name || null, customer_phone || null, customer_email || null,
+                    order_notes || null
                 ]
             );
             const orderId = orderResult.insertId;
+
+            // Log Initial Status
+            await connection.execute(
+                'INSERT INTO order_status_history (order_id, status, notes) VALUES (?, ?, ?)',
+                [orderId, 'Pending', 'Order placed by customer']
+            );
 
             for (const item of items) {
                 await connection.execute(
@@ -73,8 +80,31 @@ const Order = {
         return rows;
     },
 
-    updateStatus: async (id, status) => {
-        return await db.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+    updateStatus: async (id, status, notes = '') => {
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
+        try {
+            await connection.execute('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+            await connection.execute(
+                'INSERT INTO order_status_history (order_id, status, notes) VALUES (?, ?, ?)',
+                [id, status, notes]
+            );
+            await connection.commit();
+            return true;
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
+    },
+
+    getStatusHistory: async (orderId) => {
+        const [rows] = await db.execute(
+            'SELECT * FROM order_status_history WHERE order_id = ? ORDER BY created_at ASC',
+            [orderId]
+        );
+        return rows;
     },
 
     getOrderItems: async (orderId) => {

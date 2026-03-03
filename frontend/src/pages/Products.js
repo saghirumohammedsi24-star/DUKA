@@ -6,18 +6,32 @@ import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
+        fetchCategories();
         fetchProducts();
     }, []);
 
-    const fetchProducts = async (query = '') => {
+    const fetchCategories = async () => {
+        try {
+            const res = await api.get('/categories');
+            setCategories(res.data || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const fetchProducts = async (query = '', category = 'All') => {
         setLoading(true);
         try {
-            const res = await api.get(`/products?search=${query}`);
+            let url = `/products?search=${query}`;
+            if (category !== 'All') url += `&category=${category}`;
+            const res = await api.get(url);
             setProducts(res.data);
         } catch (err) {
             console.error(err);
@@ -52,6 +66,26 @@ const Products = () => {
                         <Search size={20} />
                     </button>
                 </form>
+            </div>
+
+            <div className="flex" style={{ overflowX: 'auto', gap: '1rem', paddingBottom: '1.5rem', scrollbarWidth: 'none', marginBottom: '1.5rem' }}>
+                <button
+                    onClick={() => { setSelectedCategory('All'); fetchProducts(search, 'All'); }}
+                    className={`btn ${selectedCategory === 'All' ? 'btn-primary' : 'btn-outline'}`}
+                    style={{ whiteSpace: 'nowrap', borderRadius: '30px', padding: '0.6rem 1.5rem' }}
+                >
+                    All Collection
+                </button>
+                {categories.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => { setSelectedCategory(cat.name); fetchProducts(search, cat.name); }}
+                        className={`btn ${selectedCategory === cat.name ? 'btn-primary' : 'btn-outline'}`}
+                        style={{ whiteSpace: 'nowrap', borderRadius: '30px', padding: '0.6rem 1.5rem' }}
+                    >
+                        {cat.name}
+                    </button>
+                ))}
             </div>
 
             {loading ? (

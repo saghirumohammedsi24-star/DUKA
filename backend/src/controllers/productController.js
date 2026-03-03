@@ -2,7 +2,10 @@ const Product = require('../models/productModel');
 
 const createProduct = async (req, res, next) => {
     try {
-        const { name, description, price, category, stock, attributes } = req.body || {};
+        const {
+            name, description, price, category, stock, attributes,
+            sku, brand, base_price, discount, price_depends_on_attribute, status
+        } = req.body || {};
 
         // Handle images from upload.fields
         const image_url = req.files?.image ? `/uploads/${req.files.image[0].filename}` : (req.body?.image_url || null);
@@ -19,7 +22,10 @@ const createProduct = async (req, res, next) => {
             category: category || null,
             stock: stock || 0,
             image_url,
-            gallery_urls
+            gallery_urls,
+            sku, brand, base_price, discount,
+            price_depends_on_attribute: price_depends_on_attribute === 'true' || price_depends_on_attribute === true,
+            status: status || 'Active'
         });
 
         const productId = result.insertId;
@@ -65,7 +71,10 @@ const getProductById = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
     try {
-        const { name, description, price, category, stock, attributes } = req.body || {};
+        const {
+            name, description, price, category, stock, attributes,
+            sku, brand, base_price, discount, price_depends_on_attribute, status
+        } = req.body || {};
 
         const image_url = req.files?.image ? `/uploads/${req.files.image[0].filename}` : (req.body?.image_url || null);
         let gallery_urls = req.files?.gallery ? req.files.gallery.map(f => `/uploads/${f.filename}`) : null;
@@ -82,7 +91,10 @@ const updateProduct = async (req, res, next) => {
             category: category || null,
             stock: stock || 0,
             image_url,
-            gallery_urls: gallery_urls || []
+            gallery_urls: gallery_urls || [],
+            sku, brand, base_price, discount,
+            price_depends_on_attribute: price_depends_on_attribute === 'true' || price_depends_on_attribute === true,
+            status: status || 'Active'
         });
 
         if (result.affectedRows === 0) return res.status(404).json({ message: 'Product not found' });

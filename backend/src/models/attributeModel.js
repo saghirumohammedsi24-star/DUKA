@@ -1,8 +1,8 @@
 const db = require('../config/db');
 
 const Attribute = {
-    create: async (name) => {
-        const [result] = await db.execute('INSERT INTO attributes (name) VALUES (?)', [name]);
+    create: async (name, type = 'Variation') => {
+        const [result] = await db.execute('INSERT INTO attributes (name, type) VALUES (?, ?)', [name, type]);
         return result;
     },
 
@@ -15,10 +15,10 @@ const Attribute = {
         return attributes;
     },
 
-    addOption: async (attributeId, value, mediaUrl = null, mediaType = 'text') => {
+    addOption: async (attributeId, value, mediaUrl = null, mediaType = 'text', priceModifier = 0) => {
         const [result] = await db.execute(
-            'INSERT INTO attribute_options (attribute_id, value, media_url, media_type) VALUES (?, ?, ?, ?)',
-            [attributeId, value, mediaUrl, mediaType]
+            'INSERT INTO attribute_options (attribute_id, value, media_url, media_type, price_modifier) VALUES (?, ?, ?, ?, ?)',
+            [attributeId, value, mediaUrl, mediaType, priceModifier]
         );
         return result;
     },

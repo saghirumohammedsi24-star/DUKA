@@ -11,6 +11,8 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import MyAccount from './pages/MyAccount';
+import CustomerDashboard from './pages/CustomerDashboard';
+import Wishlist from './pages/Wishlist';
 
 // Protected Route Component
 const PrivateRoute = ({ children }) => {
@@ -39,9 +41,11 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
               <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+              <Route path="/dashboard" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
               <Route path="/account" element={<PrivateRoute><MyAccount /></PrivateRoute>} />
-              <Route path="/profile" element={<Navigate to="/account" />} />
+              <Route path="/profile" element={<Navigate to="/dashboard" />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             </Routes>
           </main>
